@@ -65,6 +65,14 @@ func main() {
 		}
 	}
 	fmt.Println("part1 = ", part1)
+
+	// part 2
+	part2 := 0
+	for _, game := range games {
+		max := maxRound(game.Rounds)
+		part2 += max.Red * max.Green * max.Blue
+	}
+	fmt.Println("part2 = ", part2)
 }
 
 func maxRound(rounds []Round) Round {
