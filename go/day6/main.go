@@ -38,4 +38,12 @@ func main() {
 		part1 *= int(1 + n2 - n1)
 	}
 	fmt.Println("part1 = ", part1)
+
+	t, _ := strconv.Atoi(strings.Join(reNumber.FindAllString(blocks[0], -1), ""))
+	d, _ := strconv.Atoi(strings.Join(reNumber.FindAllString(blocks[1], -1), ""))
+	n1 := math.Ceil((float64(t) - math.Sqrt(float64(t*t-4*d))) / 2)
+	n2 := math.Floor((float64(t) + math.Sqrt(float64(t*t-4*d))) / 2)
+	part2 := int(1 + n2 - n1)
+
+	fmt.Println("part2 = ", part2)
 }
