@@ -49,6 +49,48 @@ func main() {
 		}
 	}
 	fmt.Println("part1 = ", part1)
+
+	//part 2
+	var seedRanges [][2]int
+	for i := 0; i < len(seeds)/2; i++ {
+		seedRanges = append(seedRanges, [2]int{seeds[2*i], seeds[2*i] + seeds[2*i+1] - 1})
+	}
+	part2 := math.MaxInt
+	ranges := seedRanges
+	for _, m := range maps {
+		next := [][2]int{}
+		for {
+			if len(ranges) == 0 {
+				break
+			}
+			rang := ranges[0]
+			ranges = ranges[1:]
+			notInRange := true
+			for _, r := range m {
+				if rang[0] < r.Source+r.Range && rang[1] >= r.Source {
+					next = append(next, [2]int{(max(rang[0], r.Source) - r.Source) + r.Dest, (min(rang[1], r.Source+r.Range-1) - r.Source) + r.Dest})
+					if rang[0] < r.Source {
+						ranges = append(ranges, [2]int{rang[0], r.Source - 1})
+					}
+					if rang[1] >= (r.Source + r.Range) {
+						ranges = append(ranges, [2]int{r.Source + r.Range, rang[1]})
+					}
+					notInRange = false
+					break
+				}
+			}
+			if notInRange {
+				next = append(next, rang)
+			}
+		}
+		ranges = next
+	}
+	for _, r := range ranges {
+		if r[0] < part2 {
+			part2 = r[0]
+		}
+	}
+	fmt.Println("part2 = ", part2)
 }
 
 type Mapper struct {
