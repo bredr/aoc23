@@ -123,22 +123,11 @@ func (s *solver) FindPath(S Pos, path []Pos) ([]Pos, bool) {
 		}
 		if _, ok := s.pipes[p]; ok {
 			delete(s.pipes[p], current)
-			if !contains(path, p) {
-				nextPath, ok := s.FindPath(S, append(path, p))
-				if ok {
-					return nextPath, true
-				}
+			nextPath, ok := s.FindPath(S, append(path, p))
+			if ok {
+				return nextPath, true
 			}
 		}
 	}
 	return path, false
-}
-
-func contains(s []Pos, e Pos) bool {
-	for _, a := range s {
-		if a.X == e.X && a.Y == e.Y {
-			return true
-		}
-	}
-	return false
 }
