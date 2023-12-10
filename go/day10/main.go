@@ -5,7 +5,6 @@ import (
 	"log"
 	"math"
 	"os"
-	"reflect"
 	"strings"
 )
 
@@ -25,6 +24,9 @@ func main() {
 	pipes := make(map[Pos]map[Pos]struct{})
 	var S Pos
 
+	pipesTypes := make(map[Pos]string)
+	maxX := len(strings.Split(rows[0], ""))
+
 	for y, row := range rows {
 		for x, v := range strings.Split(row, "") {
 			if v == "." {
@@ -33,6 +35,7 @@ func main() {
 			if v == "S" {
 				S = Pos{x, y}
 			} else {
+				pipesTypes[Pos{x, y}] = v
 				switch v {
 				case "-":
 					pipes[Pos{x, y}] = map[Pos]struct{}{{x - 1, y}: {}, {x + 1, y}: {}}
@@ -50,17 +53,61 @@ func main() {
 			}
 		}
 	}
-	loop, _ := findPath(S, pipes, []Pos{})
+	s := solver{pipes}
+	loop, _ := s.FindPath(S, []Pos{})
 	fmt.Println("part1 = ", math.Ceil(float64(len(loop))/2))
 
+	inLoop := make(map[Pos]string)
+	for _, p := range loop {
+		inLoop[p] = pipesTypes[p]
+	}
+
+	inside := []Pos{}
+	for y := 0; y < len(rows); y++ {
+		outside := true
+		previousBend := ""
+		for x := 0; x < maxX; x++ {
+			p := Pos{x, y}
+			pipe, ok := inLoop[p]
+			if ok {
+				switch pipe {
+				case "|":
+					outside = !outside
+				case "7":
+					if previousBend == "L" {
+						outside = !outside
+					}
+					previousBend = pipe
+				case "F":
+					previousBend = pipe
+				case "L":
+					previousBend = pipe
+				case "J":
+					if previousBend == "F" {
+						outside = !outside
+					}
+					previousBend = pipe
+				}
+			} else {
+				if !outside {
+					inside = append(inside, p)
+				}
+			}
+		}
+	}
+	fmt.Println("part2 = ", len(inside))
 }
 
-func findPath(S Pos, pipes map[Pos]map[Pos]struct{}, path []Pos) ([]Pos, bool) {
+type solver struct {
+	pipes map[Pos]map[Pos]struct{}
+}
+
+func (s *solver) FindPath(S Pos, path []Pos) ([]Pos, bool) {
 	if len(path) == 0 {
 		for _, p := range []Pos{{S.X + 1, S.Y}, {S.X - 1, S.Y}, {S.X, S.Y - 1}, {S.X, S.Y + 1}} {
-			if pipe, ok := pipes[p]; ok {
+			if pipe, ok := s.pipes[p]; ok {
 				if _, ok := pipe[S]; ok {
-					nextPath, ok := findPath(S, pipes, append(path, p))
+					nextPath, ok := s.FindPath(S, append(path, p))
 					if ok {
 						return nextPath, true
 					}
@@ -69,18 +116,17 @@ func findPath(S Pos, pipes map[Pos]map[Pos]struct{}, path []Pos) ([]Pos, bool) {
 		}
 	}
 	current := path[len(path)-1]
-	for p := range pipes[current] {
-		if len(path) > 2 && reflect.DeepEqual(p, S) {
+	for p := range s.pipes[current] {
+		if len(path) > 2 && p.X == S.X && p.Y == S.Y {
 			// do end of thing
 			return path, true
 		}
-		if pipe, ok := pipes[p]; ok {
-			if _, ok := pipe[current]; ok {
-				if !contains(path, p) {
-					nextPath, ok := findPath(S, pipes, append(path, p))
-					if ok {
-						return nextPath, true
-					}
+		if _, ok := s.pipes[p]; ok {
+			delete(s.pipes[p], current)
+			if !contains(path, p) {
+				nextPath, ok := s.FindPath(S, append(path, p))
+				if ok {
+					return nextPath, true
 				}
 			}
 		}
@@ -90,7 +136,7 @@ func findPath(S Pos, pipes map[Pos]map[Pos]struct{}, path []Pos) ([]Pos, bool) {
 
 func contains(s []Pos, e Pos) bool {
 	for _, a := range s {
-		if reflect.DeepEqual(a, e) {
+		if a.X == e.X && a.Y == e.Y {
 			return true
 		}
 	}
