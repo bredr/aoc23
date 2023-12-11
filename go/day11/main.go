@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"log"
-	"math"
 	"os"
 	"slices"
 	"strings"
@@ -50,7 +49,7 @@ func main() {
 		}
 	}
 
-	expandedUniverse := expand(galaxies, maxX, maxY, emptyX, emptyY)
+	expandedUniverse := expand(galaxies, maxX, maxY, emptyX, emptyY, 1)
 	part1 := 0
 	for a, aPos := range expandedUniverse {
 		for b, bPos := range expandedUniverse {
@@ -60,13 +59,24 @@ func main() {
 		}
 	}
 	fmt.Println("part1 = ", part1)
+
+	expandedUniverse2 := expand(galaxies, maxX, maxY, emptyX, emptyY, 1_000_000-1)
+	part2 := 0
+	for a, aPos := range expandedUniverse2 {
+		for b, bPos := range expandedUniverse2 {
+			if a > b {
+				part2 += distance(aPos, bPos)
+			}
+		}
+	}
+	fmt.Println("part2 = ", part2)
 }
 
 func distance(a, b Pos) int {
-	return int(math.Abs(float64(a.X)-float64(b.X)) + math.Abs(float64(a.Y)-float64(b.Y)))
+	return abs(a.X-b.X) + abs(a.Y-b.Y)
 }
 
-func expand(galaxies map[int]Pos, maxX, maxY int, emptyX []int, emptyY []int) map[int]Pos {
+func expand(galaxies map[int]Pos, maxX, maxY int, emptyX []int, emptyY []int, factor int) map[int]Pos {
 	output := make(map[int]Pos)
 
 	xToAdd := make(map[int]int)
@@ -74,15 +84,15 @@ func expand(galaxies map[int]Pos, maxX, maxY int, emptyX []int, emptyY []int) ma
 
 	toAdd := 0
 	for x := 0; x < maxX; x++ {
-		if slices.Contains(emptyX, x) {
-			toAdd++
+		if x > 0 && slices.Contains(emptyX, x) {
+			toAdd += factor
 		}
 		xToAdd[x] = toAdd
 	}
 	toAdd = 0
 	for y := 0; y < maxY; y++ {
-		if slices.Contains(emptyY, y) {
-			toAdd++
+		if y > 0 && slices.Contains(emptyY, y) {
+			toAdd += factor
 		}
 		yToAdd[y] = toAdd
 	}
@@ -90,4 +100,11 @@ func expand(galaxies map[int]Pos, maxX, maxY int, emptyX []int, emptyY []int) ma
 		output[k] = Pos{v.X + xToAdd[v.X], v.Y + yToAdd[v.Y]}
 	}
 	return output
+}
+
+func abs(a int) int {
+	if a < 0 {
+		return a * -1
+	}
+	return a
 }
