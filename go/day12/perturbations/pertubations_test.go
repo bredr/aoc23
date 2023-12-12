@@ -13,24 +13,25 @@ func TestPerturbations(t *testing.T) {
 	}
 	tests := []struct {
 		args args
-		want []string
+		want int
 	}{
 		{
 			args{"#.#.###", []int{1, 1, 3}},
-			[]string{"#.#.###"},
+			1,
 		},
 		{
 			args{"??", []int{1}},
-			[]string{".#", "#."},
+			2,
 		},
 		{
 			args{"?###????????", []int{3, 2, 1}},
-			[]string{".###....##.#", ".###...##..#", ".###..##...#", ".###.##....#", ".###...##.#.", ".###..##..#.", ".###.##...#.", ".###..##.#..", ".###.##..#..", ".###.##.#..."},
+			10,
 		},
 	}
 	for i, tt := range tests {
+		s := Solver{Cache: make(map[string]int)}
 		t.Run(fmt.Sprintf("test_%d", i), func(t *testing.T) {
-			if got := Perturbations(tt.args.record, tt.args.counts); !reflect.DeepEqual(got, tt.want) {
+			if got := s.ValidArrangements([]rune(tt.args.record), tt.args.counts, 0); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("Perturbations() = %v, want %v", got, tt.want)
 			}
 		})

@@ -1,75 +1,73 @@
 package perturbations
 
 import (
-	"regexp"
-	"strings"
+	"bytes"
+	"encoding/gob"
 )
 
-func Perturbations(record string, counts []int) []string {
-	if !strings.Contains(record, "?") {
-		return []string{record}
-	}
-	out := []string{}
-
-	pattern := `^\.*`
-	for idx, v := range counts {
-		for i := 0; i < v; i++ {
-			pattern += "#"
-		}
-		if idx < len(counts)-1 {
-			pattern += `\.+`
-		}
-	}
-	pattern += `\.*$`
-	validRecord := regexp.MustCompile(pattern)
-	toReplace := regexp.MustCompile(`\?`)
-	matches := []int{}
-	for _, match := range toReplace.FindAllStringIndex(record, -1) {
-		matches = append(matches, match[0])
-	}
-
-	for _, test := range generateSubsetsWithRemainder(matches) {
-		x := replace(record, test[0], test[1])
-		if validRecord.MatchString(x) {
-			out = append(out, x)
-		}
-	}
-	return out
+type Params struct {
+	Record []rune
+	Counts []int
+	Size   int
 }
 
-func replace(r string, x, y []int) string {
-	out := []rune(r)
-	for _, i := range x {
-		out[i] = '.'
-	}
-	for _, i := range y {
-		out[i] = '#'
-	}
-	return string(out)
+func (p Params) Hash() string {
+	var b bytes.Buffer
+	gob.NewEncoder(&b).Encode(p)
+	return b.String()
 }
 
-func generateSubsetsWithRemainder(nums []int) [][][]int {
-	var result [][][]int
-	n := len(nums)
+type Solver struct {
+	Cache map[string]int
+}
 
-	// Total number of subsets: 2^n
-	totalSubsets := 1 << n
-
-	for i := 0; i < totalSubsets; i++ {
-		var subset []int
-		var remainder []int
-
-		// Check each bit of i to determine the elements in the subset and remainder
-		for j := 0; j < n; j++ {
-			if (i>>j)&1 == 1 {
-				subset = append(subset, nums[j])
-			} else {
-				remainder = append(remainder, nums[j])
-			}
+func (s *Solver) ValidArrangements(record []rune, counts []int, size int) int {
+	if len(record) == 0 {
+		if (len(counts) == 1 && counts[0] == size) || (len(counts) == 0 && size == 0) {
+			return 1
 		}
+		return 0
+	}
+	params := Params{record, counts, size}.Hash()
+	if v, ok := s.Cache[params]; ok {
+		return v
+	}
+	v := s.validArrangements(record, counts, size)
+	s.Cache[params] = v
+	return v
+}
 
-		result = append(result, [][]int{subset, remainder})
+func (s *Solver) validArrangements(record []rune, counts []int, size int) int {
+	if len(record) == 0 {
+		if (len(counts) == 1 && counts[0] == size) || (len(counts) == 0 && size == 0) {
+			return 1
+		}
+		return 0
 	}
 
-	return result
+	spring := record[0]
+	springs := record[1:]
+	count := 0
+	if len(counts) > 0 {
+		count = counts[0]
+	}
+	if spring == '?' {
+		return s.ValidArrangements(append([]rune{'#'}, springs...), counts, size) + s.ValidArrangements(append([]rune{'.'}, springs...), counts, size)
+	}
+	if spring == '#' {
+		if size > count {
+			return 0
+		}
+		return s.ValidArrangements(springs, counts, size+1)
+	}
+	if spring == '.' {
+		if size == 0 {
+			return s.ValidArrangements(springs, counts, 0)
+		}
+		if size == count {
+			return s.ValidArrangements(springs, counts[1:], 0)
+		}
+		return 0
+	}
+	panic("err")
 }
