@@ -21,6 +21,29 @@ func main() {
 	s := solver{grid, len(grid[0]) - 1, len(grid) - 1}
 	energised := s.Traverse(Vec{-1, 0}, Vec{1, 0}, make(map[Vec]map[Vec]struct{}))
 	fmt.Println("part1 = ", len(energised))
+
+	part2 := 0
+	for y := 0; y < s.MaxY; y++ {
+		energised := s.Traverse(Vec{-1, y}, Vec{1, 0}, make(map[Vec]map[Vec]struct{}))
+		if len(energised) > part2 {
+			part2 = len(energised)
+		}
+		energised = s.Traverse(Vec{s.MaxX + 1, y}, Vec{-1, 0}, make(map[Vec]map[Vec]struct{}))
+		if len(energised) > part2 {
+			part2 = len(energised)
+		}
+	}
+	for x := 0; x < s.MaxX; x++ {
+		energised := s.Traverse(Vec{x, -1}, Vec{0, 1}, make(map[Vec]map[Vec]struct{}))
+		if len(energised) > part2 {
+			part2 = len(energised)
+		}
+		energised = s.Traverse(Vec{x, s.MaxY + 1}, Vec{0, -1}, make(map[Vec]map[Vec]struct{}))
+		if len(energised) > part2 {
+			part2 = len(energised)
+		}
+	}
+	fmt.Println("part2 = ", part2)
 }
 
 type Vec struct {
@@ -55,7 +78,7 @@ type Beam struct {
 
 func (s *solver) Traverse(position Vec, direction Vec, energised map[Vec]map[Vec]struct{}) map[Vec]map[Vec]struct{} {
 	// loop protection
-	if position.X >= 0 && position.Y >= 0 {
+	if position.X >= 0 && position.Y >= 0 && position.X <= s.MaxX && position.Y <= s.MaxY {
 		if v, ok := energised[position]; ok {
 			if _, ok := v[direction]; ok {
 				return energised
