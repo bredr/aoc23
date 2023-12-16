@@ -109,55 +109,15 @@ func (s *solver) Traverse(position Vec, direction Vec, energised map[Vec]map[Vec
 		if direction.Y == 0 {
 			return s.Traverse(next, direction, energised)
 		}
-		a := s.Traverse(next, Vec{-1, 0}, energised)
-		b := s.Traverse(next, Vec{1, 0}, energised)
-		for k, v := range a {
-			for direction := range v {
-				if _, ok := energised[k]; ok {
-					energised[k][direction] = struct{}{}
-				} else {
-					energised[k] = make(map[Vec]struct{})
-					energised[k][direction] = struct{}{}
-				}
-			}
-		}
-		for k, v := range b {
-			for direction := range v {
-				if _, ok := energised[k]; ok {
-					energised[k][direction] = struct{}{}
-				} else {
-					energised[k] = make(map[Vec]struct{})
-					energised[k][direction] = struct{}{}
-				}
-			}
-		}
+		s.Traverse(next, Vec{-1, 0}, energised)
+		s.Traverse(next, Vec{1, 0}, energised)
 		return energised
 	case '|':
 		if direction.X == 0 {
 			return s.Traverse(next, direction, energised)
 		}
-		a := s.Traverse(next, Vec{0, 1}, energised)
-		b := s.Traverse(next, Vec{0, -1}, energised)
-		for k, v := range a {
-			for direction := range v {
-				if _, ok := energised[k]; ok {
-					energised[k][direction] = struct{}{}
-				} else {
-					energised[k] = make(map[Vec]struct{})
-					energised[k][direction] = struct{}{}
-				}
-			}
-		}
-		for k, v := range b {
-			for direction := range v {
-				if _, ok := energised[k]; ok {
-					energised[k][direction] = struct{}{}
-				} else {
-					energised[k] = make(map[Vec]struct{})
-					energised[k][direction] = struct{}{}
-				}
-			}
-		}
+		s.Traverse(next, Vec{0, 1}, energised)
+		s.Traverse(next, Vec{0, -1}, energised)
 		return energised
 	default:
 		panic("not meant to be here")
